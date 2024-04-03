@@ -1,4 +1,4 @@
-local ffi = require "ffi"
+local ffi = require"ffi"
 
 ffi.cdef"unsigned int sleep(unsigned int seconds);"
 ffi.cdef"unsigned int wait();"
@@ -290,6 +290,18 @@ function _U.split(str, spr)
         i = i + 1
     end
     return result
+end
+
+function _U.getconf(opt)
+  local json = require"cjson"
+
+  local ok, config = pcall(json.decode, _G.current_config_json)
+  if not ok then
+    _U.logger.bad"Проблемы с получением динамической конфигурации! Будет использоваться значение по умолчанию."
+    config = {}
+  end
+
+  return config[opt] or _G.config_default[opt]
 end
 
 return _U

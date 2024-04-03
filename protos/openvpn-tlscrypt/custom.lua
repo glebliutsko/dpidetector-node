@@ -1,10 +1,12 @@
-local sp     = require"subprocess"
-local req    = require"checker.requests"
-local json   = require"cjson"
-local sleep  = require"checker.utils".sleep
-local wait   = require"checker.utils".wait
-local log   = require"checker.utils".logger
-local b64dec = require"checker.utils".b64dec
+local sp      = require"subprocess"
+local req     = require"checker.requests"
+local json    = require"cjson"
+local utils   = require"checker.utils"
+local sleep   = utils.sleep
+local wait    = utils.wait
+local log     = utils.logger
+-- local getconf = utils.getconf
+local b64dec  = utils.b64dec
 
 local _C = {}
 
@@ -104,6 +106,7 @@ _C.connect = function(server)
   log.debug"===== Выход из цикла ожидания подключения ====="
   if finished == false then
     log.bad"Проблемы с настройкой подключения. Необходима отладка!"
+    _G.need_restart = true
     return false
   end
   log.good"Подключение активировано"

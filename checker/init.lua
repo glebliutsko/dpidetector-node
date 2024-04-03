@@ -1,7 +1,12 @@
 -- luacheck: globals
 
-local interval = 600
-_G.version  = "0.0.1"
+_G.version  = "0.0.2"
+_G.config_default = {
+  interval = 300,
+  backend_domain = "dpidetect.org",
+  geo_domain = "geo.dpidetect.org",
+  get_ip_url = "https://geo.dpidetect.org/get-ip/plain",
+}
 
 local json   = require"cjson"
 local utils  = require"checker.utils"
@@ -9,6 +14,7 @@ local req    = require"checker.requests"
 local custom = require"checker.custom"
 local sleep  = utils.sleep
 local getenv = utils.getenv
+local getconf = utils.getconf
 local log    = utils.logger
 
 _G.proto     = custom.proto
@@ -34,11 +40,6 @@ _G.log_fd = _G.devnull
 
 log.debug"Запуск приложения"
 
-local backend_domain = "dpidetect.org"
-local api = ("https://%s/api"):format(backend_domain)
-local servers_endpoint = ("%s/servers/"):format(api)
-local reports_endpoint = ("%s/reports/"):format(api)
-
 _G.headers = {
   ("Token: %s"):format(token),
   ("Software-Version: %s"):format(_G.version),
@@ -50,8 +51,21 @@ while true do
   log.debug"== Итерация главного цикла начата =="
   local servers = {}
 
+  --- NOTE: попробуем реализацию с получением конфигурации при каждой итерации
+  --- (чтобы ноды подхватывали изменения без перезапуска)
+  --- посмотрим, не будет ли из-за этого проблем
+
+  _G.current_config_json = req{
+    url = "https://dpidetector.github.io/config.json"
+  }
+
+  local api = ("https://%s/api"):format(getconf"backend_domain")
+  local servers_endpoint = ("%s/servers/"):format(api)
+  local reports_endpoint = ("%s/reports/"):format(api)
+  local interval = getconf"interval"
+
   local geo = req{
-    url = "https://geo.dpidetect.org/get-iso/plain"
+    url = ("https://%s/get-iso/plain"):format(getconf"geo_domain")
   }
 
   if geo:match"RU" then

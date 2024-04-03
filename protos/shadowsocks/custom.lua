@@ -1,9 +1,11 @@
-local sp    = require"subprocess"
-local req   = require"checker.requests"
-local json  = require"cjson"
-local sleep = require"checker.utils".sleep
-local wait  = require"checker.utils".wait
-local log   = require"checker.utils".logger
+local sp      = require"subprocess"
+local req     = require"checker.requests"
+local json    = require"cjson"
+local utils   = require"checker.utils"
+local sleep   = utils.sleep
+local wait    = utils.wait
+local log     = utils.logger
+local getconf = utils.getconf
 
 local _C = {}
 
@@ -85,7 +87,7 @@ _C.checker = function(server)
 
   local ret = false
   local res = req{
-    url = "https://geo.dpidetect.org/get-ip/plain",
+    url = getconf("get_ip_url"),
     proxy = "socks5://127.0.0.1:1080",
   }
 
