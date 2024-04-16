@@ -49,4 +49,4 @@ if ! [[ -f "${PWD}/user.conf" ]]; then
    "После чего нажмите Enter"
   read
 fi
-BUILD=1 RECREATE=1 bash start.bash
+BUILD=1 bash start.bash
