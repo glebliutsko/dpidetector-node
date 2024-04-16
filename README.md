@@ -32,9 +32,9 @@ git clone https://github.com/DPIdetector/dpidetector-node
 token=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 node_id=3983af23-faba-8e30-e09d-3b0cc2bacebe
 ```
-3) Собственно, запустить набор контейнеров:
+3) Запустить скрипт первичной установки и настройки набора контейнеров:
 ```
-bash start.bash
+bash install.bash
 ```
 
 Если у Вас есть вопросы по поводу установки Docker на вашу ОС - можете ознакомиться с [данной статьёй](https://docs.docker.com/engine/install/) или задать вопрос в [нашем чате](https://t.me/dpidetector)
