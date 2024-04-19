@@ -8,6 +8,7 @@ RUN apk add \
   lua5.1-curl \
   lua5.1-subprocess \
   luajit \
+  mtr \
   ; \
   echo "trigger-for-re-running-this-step: 1111"
 # openvpn-openrc

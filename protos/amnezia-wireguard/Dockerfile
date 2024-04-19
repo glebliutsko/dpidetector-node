@@ -8,6 +8,7 @@ RUN apk add curl bash \
   lua5.1-curl \
   lua5.1-subprocess \
   luajit \
+  mtr \
   ; \
   case "${TARGETARCH}" in \
     i386) ARCH="x86" ;; \
