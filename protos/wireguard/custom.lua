@@ -5,6 +5,7 @@ local utils   = require"checker.utils"
 local sleep   = utils.sleep
 local wait    = utils.wait
 local log     = utils.logger
+local check   = utils.check
 -- local getconf = utils.getconf
 
 local _C = {}
@@ -171,28 +172,11 @@ end
 _C.checker = function(server)
   log.debug"==== Вход в функцию проверки доступности ===="
   log.print"Проверка доступности начата"
-  local ret = false
   local res = req{
     url = ("http://%s:%d/"):format(server.meta.test_host, server.meta.test_port),
     interface = _C.interface_name,
   }
-
-  if res:match(server.meta.server_ip) then
-    ret = true
-    log.good"Проверка завершена успешно"
-  else
-    log.bad"Проверка провалилась!"
-    log.debug(("IP сервера (из метаданных): %q"):format(server.meta.server_ip))
-    log.debug(("Ответ сервиса определения IP (или ошибка cURL): %q"):format(res))
-    if res:match"^%d%d?%d?%.%d%d?%d?%.%d%d?%d?%.%d%d?%d?$" then --- TODO: IPv6 когда докер будет уметь его из коробки
-      log.debug"%{bold} Учитывая, что выше не ошибка подключения, а два разных IP, скорее всего проявился какой-то баг"
-      log.debug"%{bold} Возможные варианты:"
-      log.debug"%{bold} - не отключилось предыдущее подключение"
-      log.debug"%{bold} - что-то с обновлением конфига (или шаблоном)"
-      log.debug"%{bold} - баг в туннелирующем софте и на предыдущей итерации он отказался отключаться"
-      log.debug"%{bold} В любом случае - нужно написать в чат"
-    end
-  end
+  local ret = check(res, server.meta.server_ip)
   log.debug"==== Выход из функции проверки доступности ===="
   return ret
 end

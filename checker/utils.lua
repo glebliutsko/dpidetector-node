@@ -304,4 +304,46 @@ function _U.getconf(opt)
   return config[opt] or _G.config_default[opt]
 end
 
+function _U.check(res, ip)
+  if res:match(ip) then
+    _U.logger.good"Проверка завершена успешно"
+    return true
+  else
+    _U.logger.bad"Проверка провалилась!"
+    _U.logger.debug(("IP сервера (из метаданных): %q"):format(ip))
+    _U.logger.debug(("Ответ сервиса определения IP (или ошибка cURL): %q"):format(res))
+    if res:match"^%d%d?%d?%.%d%d?%d?%.%d%d?%d?%.%d%d?%d?$" then --- TODO: IPv6 когда докер будет уметь его из коробки
+      _U.logger.debug"%{bold} Учитывая, что выше не ошибка подключения, а два разных IP, скорее всего проявился какой-то баг"
+      _U.logger.debug"%{bold} Возможные варианты:"
+      _U.logger.debug"%{bold} - не отключилось предыдущее подключение"
+      _U.logger.debug"%{bold} - что-то с обновлением конфига (или шаблоном)"
+      _U.logger.debug"%{bold} - баг в туннелирующем софте и на предыдущей итерации он отказался отключаться"
+      _U.logger.debug"%{bold} В любом случае - нужно написать в чат"
+    end
+    return false
+  end
+end
+
+function _U.trace(srv)
+  _U.logger.debug"===== Выполнение трассировки прохождения трафика до сервера ====="
+  local mtr_fd = io.popen(table.concat({
+    "mtr",
+    "--no-dns",
+    "--report-wide",
+    "--report-cycles=1",
+    "--gracetime=1",
+    "--aslookup",
+    "--tcp",
+    "--port",
+    srv.port,
+    srv.domain,
+  },
+  " "
+  ))
+
+  _U.logger.debug(mtr_fd:read"*a")
+  mtr_fd:close()
+  _U.logger.debug"===== Завершено ====="
+end
+
 return _U

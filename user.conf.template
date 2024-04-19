@@ -1,2 +1,2 @@
 token={YOUR_TOKEN}
-node={YOUR_NODE_NAME}
+node_id={UID_OF_THIS_NODE}

@@ -2,20 +2,21 @@
 
 _G.version  = "0.0.2"
 _G.config_default = {
-  interval = 300,
-  backend_domain = "dpidetect.org",
-  geo_domain = "geo.dpidetect.org",
-  get_ip_url = "https://geo.dpidetect.org/get-ip/plain",
+  interval        = 300,
+  backend_domain  = "dpidetect.org",
+  geo_domain      = "geo.dpidetect.org",
+  get_ip_url      = "https://geo.dpidetect.org/get-ip/plain",
 }
 
-local json   = require"cjson"
-local utils  = require"checker.utils"
-local req    = require"checker.requests"
-local custom = require"checker.custom"
-local sleep  = utils.sleep
-local getenv = utils.getenv
+local json    = require"cjson"
+local utils   = require"checker.utils"
+local req     = require"checker.requests"
+local custom  = require"checker.custom"
+local sleep   = utils.sleep
+local getenv  = utils.getenv
 local getconf = utils.getconf
-local log    = utils.logger
+local log     = utils.logger
+local trace   = utils.trace
 
 _G.proto     = custom.proto
 local token  = getenv"token"
@@ -117,6 +118,8 @@ while true do
     log.debug(("=== [%d] Итерация цикла проверки доступности серверов начата ==="):format(idx))
 
     _G.log_fd = io.open(log_fn, "w+")
+
+    trace(server or { domain="localhost", port = 0, })
 
     log.print"Попытка установления соединения с сервером и проверки работоспособности подключения"
     local conn = custom.connect(server)
