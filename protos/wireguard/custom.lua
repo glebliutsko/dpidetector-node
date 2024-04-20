@@ -14,6 +14,7 @@ local cfg_path = "/etc/wireguard/wg.conf"
 
 _C.proto = "wireguard"
 _C.interface_name = "wg"
+_C.type = "transport"
 
 _C.connect = function(server)
   log.debug"==== Вход в функцию подключения ===="

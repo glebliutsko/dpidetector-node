@@ -15,6 +15,7 @@ local cfg_path = "/etc/openvpn/checker.conf"
 
 _C.proto = "openvpn"
 _C.interface_name = "ovpn"
+_C.type = "transport"
 
 _C.connect = function(server)
   log.debug"==== Вход в функцию подключения ===="

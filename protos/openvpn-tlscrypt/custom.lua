@@ -15,6 +15,7 @@ local cfg_path = "/etc/openvpn/checker.conf"
 
 _C.proto = "openvpn-tlscrypt"
 _C.interface_name = "ovpn-tlscrypt"
+_C.type = "transport"
 
 _C.connect = function(server)
   log.debug"==== Вход в функцию подключения ===="

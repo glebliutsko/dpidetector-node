@@ -2,15 +2,16 @@ local sp      = require"subprocess"
 local req     = require"checker.requests"
 local json    = require"cjson"
 local utils   = require"checker.utils"
--- local sleep   = utils.sleep
+local sleep   = utils.sleep
 -- local wait    = utils.wait
 local log     = utils.logger
 local check   = utils.check
-local getconf = utils.getconf
+-- local getconf = utils.getconf
 
 local _C = {}
 
-_C.proto = "shadowsocks"
+_C.proto = "anyconnect"
+_C.interface_name = "oc"
 _C.type = "transport"
 
 _C.connect = function(server)
@@ -27,11 +28,19 @@ _C.connect = function(server)
 
   log.debug"===== Попытка десериализации полученного конфига ====="
   if meta_r:match"^%[" or meta_r:match"^%{" then
-      local ok, res = pcall(json.decode, meta_r)
-    if ok then
+    local ok, res = pcall(json.decode, meta_r)
+    if ok
+      and res.port
+      and res.host
+      and res.login
+      and res.password
+      and res.test_host
+      and res.test_port
+      and res.server_ip
+    then
       server.meta = res
     else
-      log.bad(("Ошибка десериализации мета-информации о сервере: %s"):format(meta_r))
+      log.bad(("Ошибка десереализации мета-информации о сервере: %s"):format(meta_r))
       return false
     end
   end
@@ -40,20 +49,40 @@ _C.connect = function(server)
   local _E = {}
 
   log.debug"===== Выполнение команды подключения ====="
-  _C.ss_proc, _E.errmsg, _E.errno = sp.popen{
-    "sslocal",
-    "-s", ("%s:%d"):format(server.meta.server_ip, server.meta.port),
-    "-k", server.meta.password,
-    "-b", "127.0.0.1:1080",
-    "-m", server.meta.encryption,
-    "--timeout", "60",
+  --- HACK: не получается работать с stdin при использовании методов из документации, так что 🩼🩼🩼
+  ---  предполагается указание stdin = sp.PIPE, и потом в _C.oc_proc.stdin должен быть файловый дескриптор
+  ---  однако там оказывается userdata, и писать туда через :write() не выходит
+
+  local pwd_fd = io.open("/tmp/pwd","w+")
+  pwd_fd:write(server.meta.password)
+  pwd_fd:flush()
+  pwd_fd:close()
+
+  _C.oc_proc, _E.errmsg, _E.errno = sp.popen{
+    "sh", "-c",
+    table.concat({
+      "openconnect",
+      "--user=%s",
+      "--passwd-on-stdin",
+      "--non-inter",
+      "--interface=%s",
+      "--server=%s:%d",
+      "<",
+      "/tmp/pwd"
+    }, " "
+    ):format(
+      server.meta.login,
+      _C.interface_name,
+      server.meta.host,
+      server.meta.port
+    ),
     stdout = _G.log_fd or _G.stdout,
     stderr = _G.log_fd or _G.stderr,
   }
-  if not _C.ss_proc or _C.ss_proc:poll() then
+  if not _C.oc_proc or _C.oc_proc:poll() then
     log.bad(("Проблема при инициализации! Сообщение об ошибке: %s. Код: %d"):format(_E.errmsg, _E.errno))
-    if _C.ss_proc then _C.ss_proc:kill() end
-    _C.ss_proc = nil
+    if _C.oc_proc then _C.oc_proc:kill() end
+    _C.oc_proc = nil
     return false
   end
   log.debug"===== Завершено ====="
@@ -64,11 +93,11 @@ end
 
 _C.disconnect = function(_server)
   log.debug"==== Вход в функцию завершения подключения ===="
-  if _C.ss_proc then
+  if _C.oc_proc then
     log.print"Завершение подключения"
-    _C.ss_proc:terminate()
-    _C.ss_proc:wait()
-    _C.ss_proc = nil
+    _C.oc_proc:terminate()
+    _C.oc_proc:wait()
+    _C.oc_proc = nil
   else
     log.bad"Вызвана функция отключения, но исчезли дескрипторы подключения. Нужна отладка!"
   end
@@ -79,8 +108,8 @@ _C.checker = function(server)
   log.debug"==== Вход в функцию проверки доступности ===="
   log.print"Проверка доступности начата"
   local res = req{
-    url = getconf("get_ip_url"),
-    proxy = "socks5://127.0.0.1:1080",
+    url = ("http://%s:%d/"):format(server.meta.test_host, server.meta.test_port),
+    interface = _C.interface_name,
   }
   local ret = check(res, server.meta.server_ip)
   log.debug"==== Выход из функции проверки доступности ===="
@@ -88,3 +117,4 @@ _C.checker = function(server)
 end
 
 return _C
+

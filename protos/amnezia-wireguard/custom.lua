@@ -14,6 +14,7 @@ local cfg_path = "/etc/wireguard/awg.conf"
 
 _C.proto = "amnezia-wireguard"
 _C.interface_name = "awg"
+_C.type = "transport"
 
 _C.connect = function(server)
   log.debug"==== Вход в функцию подключения ===="

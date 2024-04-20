@@ -13,6 +13,7 @@ local _C = {}
 local cfg_path = "/etc/ckclient.json"
 
 _C.proto = "cloak"
+_C.type = "transport"
 
 _C.connect = function(server)
   log.debug"==== Вход в функцию подключения ===="
