@@ -53,7 +53,6 @@ _G.headers = {
 log.debug"= Вход в основной рабочий цикл ="
 while true do
   log.debug"== Итерация главного цикла начата =="
-  local servers = {}
 
   --- NOTE: попробуем реализацию с получением конфигурации при каждой итерации
   --- (чтобы ноды подхватывали изменения без перезапуска)
@@ -106,7 +105,7 @@ while true do
         log.debug(e)
         log.debug"=================="
       else
-        servers = e
+        local servers = e or {}
         for idx, server in ipairs(servers) do
           log.debug(("=== [%d] Итерация цикла проверки доступности серверов начата ==="):format(idx))
 
@@ -157,8 +156,8 @@ while true do
             post = json.encode(report),
             headers = _G.headers,
           }
-          local ok, resp_t = pcall(json.decode, resp_json)
-          if not ok then
+          local rok, resp_t = pcall(json.decode, resp_json)
+          if not rok then
             log.bad(
               ("Ошибка обработки ответа бекенда! Ожидался JSON-массив, получено: %s")
                 :format(resp_json)
@@ -175,7 +174,8 @@ while true do
           end
 
           ripz() --- NOTE: 🔫🧟
-          if _G.need_restart then os.exit(1) end --- NOTE: перезапускаем контейнер, если начала происходить какая-то дичь
+          if _G.need_restart then os.exit(1) end
+          --- NOTE: ☝️ перезапускаем контейнер, если начала происходить какая-то дичь
 
           _G.log_fd:close()
           _G.log_fd = _G.devnull
