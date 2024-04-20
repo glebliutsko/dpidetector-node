@@ -305,20 +305,24 @@ function _U.getconf(opt)
 end
 
 function _U.check(res, ip)
+  local l = _U.logger
   if res:match(ip) then
-    _U.logger.good"Проверка завершена успешно"
+    l.good"Проверка завершена успешно"
     return true
   else
-    _U.logger.bad"Проверка провалилась!"
-    _U.logger.debug(("IP сервера (из метаданных): %q"):format(ip))
-    _U.logger.debug(("Ответ сервиса определения IP (или ошибка cURL): %q"):format(res))
-    if res:match"^%d%d?%d?%.%d%d?%d?%.%d%d?%d?%.%d%d?%d?$" then --- TODO: IPv6 когда докер будет уметь его из коробки
-      _U.logger.debug"%{bold} Учитывая, что выше не ошибка подключения, а два разных IP, скорее всего проявился какой-то баг"
-      _U.logger.debug"%{bold} Возможные варианты:"
-      _U.logger.debug"%{bold} - не отключилось предыдущее подключение"
-      _U.logger.debug"%{bold} - что-то с обновлением конфига (или шаблоном)"
-      _U.logger.debug"%{bold} - баг в туннелирующем софте и на предыдущей итерации он отказался отключаться"
-      _U.logger.debug"%{bold} В любом случае - нужно написать в чат"
+    l.bad"Проверка провалилась!"
+    if not res:match"CURL_" then
+      --- NOTE:
+      --- Если там ошибка сURL'а, то о ней уже сообщено из функции запроса, так что повторять нет смысла
+      --- А если там не ошибка, но при этом IP не совпадают, то при настройке туннеля случился баг
+      l.debug"Произошёл странный баг: обнаруженный при проверке IP-адрес сервера не совпадает с его настоящим"
+      l.debug(("Ответ сервиса определения IP: %%{bold red}%q"):format(res))
+      l.debug(("Настоящий IP сервера: %%{bold red}%q"):format(ip))
+      l.debug"%{bold} Возможные варианты:"
+      l.debug"%{bold} - не отключилось предыдущее подключение"
+      l.debug"%{bold} - что-то с обновлением конфига (или шаблоном)"
+      l.debug"%{bold} - баг в туннелирующем софте и на предыдущей итерации он отказался отключаться"
+      l.debug"%{bold} В любом случае - лучше написать в чат"
     end
     return false
   end
@@ -344,6 +348,35 @@ function _U.trace(srv)
   _U.logger.debug(mtr_fd:read"*a")
   mtr_fd:close()
   _U.logger.debug"===== Завершено ====="
+end
+
+function _U.divine_grenade()
+  local sp = require"subprocess"
+  local wait = _U.wait
+  local zombies = true
+  local count = 0
+  _U.logger.debug"===== Вход в цикл очистки зомби-процессов ====="
+  repeat
+    count = count + 1
+    _U.logger.debug(("====== Итерация цикла очистки зомби-процессов: %d ======"):format(count))
+    local e = sp.call{
+      "sh",
+      "-c",
+      "ps -o stat,pid,comm | grep -q '^Z'",
+    }
+    if e == 1 then zombies = false end
+    if zombies == true then
+      _U.logger.debug"====== перед вызовом wait() ======"
+      wait()
+      _U.logger.debug"====== после вызова wait() ======"
+    end
+  until zombies==false or count>=20
+  _U.logger.debug"===== Выход из цикла очистки зомби-процессов ====="
+  if zombies == true then
+    _U.logger.bad"Проблемы с очисткой зомби-процессов (накопилось больше 20 зомби)!"
+    _U.logger.bad"Перезапускаем контейнер"
+    _G.need_restart = true
+  end
 end
 
 return _U

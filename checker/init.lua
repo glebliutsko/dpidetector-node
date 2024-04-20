@@ -17,6 +17,7 @@ local getenv  = utils.getenv
 local getconf = utils.getconf
 local log     = utils.logger
 local trace   = utils.trace
+local ripz    = utils.divine_grenade
 
 _G.proto     = custom.proto
 local token  = getenv"token"
@@ -121,6 +122,7 @@ while true do
 
     trace(server or { domain="localhost", port = 0, })
 
+    sleep(5) --- NOTE: пауза между итерациями проверок
     log.print"Попытка установления соединения с сервером и проверки работоспособности подключения"
     local conn = custom.connect(server)
 
@@ -132,6 +134,7 @@ while true do
 
     if conn then
       log.debug"=== Функция установки соединения завершилась успешно ==="
+      sleep(5) --- NOTE: дадим время туннелю "устаканиться"
       log.debug"=== Запуск функции проверки соединения ==="
       local result = custom.checker and custom.checker(server) or false
       log.debug"=== Запуск функции завершения соединения ==="
@@ -179,16 +182,16 @@ while true do
       log.bad"Если из сообщений об ошибках выше ничего не понятно - напишите в чат"
     end
 
+    ripz() --- NOTE: 🔫🧟
+    if _G.need_restart then os.exit(1) end --- NOTE: перезапускаем контейнер, если начала происходить какая-то дичь
+
     _G.log_fd:close()
     _G.log_fd = _G.devnull
 
     log.debug(("=== [%d] Итерация цикла проверки доступности серверов завершена ==="):format(idx))
   end
 
-  if _G.need_restart then os.exit(1) end
-
   log.debug"== Итерация главного цикла окончена =="
   log.debug"== Ожидание следующей итерации цикла проверки =="
-
   sleep(interval)
 end

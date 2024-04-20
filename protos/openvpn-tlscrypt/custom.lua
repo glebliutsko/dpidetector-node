@@ -3,7 +3,7 @@ local req     = require"checker.requests"
 local json    = require"cjson"
 local utils   = require"checker.utils"
 local sleep   = utils.sleep
-local wait    = utils.wait
+-- local wait    = utils.wait
 local log     = utils.logger
 local check   = utils.check
 -- local getconf = utils.getconf
@@ -83,9 +83,6 @@ _C.connect = function(server)
     if _C.ovpn_proc then
       _C.ovpn_proc:kill()
       _C.ovpn_proc = nil
-      log.debug"===== перед вызовом wait() ====="
-      wait()
-      log.debug"===== после вызова wait() ====="
     end
     return false
   end
@@ -143,30 +140,6 @@ _C.disconnect = function(_server)
     end
     _C.ovpn_proc:kill()
     _C.ovpn_proc = nil
-    local zombies = true
-    count = 0
-    log.debug"===== Вход в цикл очистки зомби-процессов ====="
-    repeat
-      count = count + 1
-      log.debug(("====== Итерация цикла очистки зомби-процессов: %d ======"):format(count))
-      local e = sp.call{
-        "sh",
-        "-c",
-        "ps -o stat,pid,comm | grep -q '^Z'",
-      }
-      if e == 1 then zombies = false end
-      if zombies == true then
-        log.debug"====== перед вызовом wait() ======"
-        wait()
-        log.debug"====== после вызова wait() ======"
-      end
-    until zombies==false or count>=20
-    log.debug"===== Выход из цикла очистки зомби-процессов ====="
-    if zombies == true then
-      log.bad"Проблемы с очисткой зомби-процессов (накопилось больше 20 зомби)!"
-      log.bad"Перезапускаем контейнер"
-      _G.need_restart = true
-    end
   else
     log.bad"Вызвана функция отключения, но исчезли дескрипторы подключения. Нужна отладка!"
   end

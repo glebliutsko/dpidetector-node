@@ -2,8 +2,8 @@ local sp      = require"subprocess"
 local req     = require"checker.requests"
 local json    = require"cjson"
 local utils   = require"checker.utils"
-local sleep   = utils.sleep
-local wait    = utils.wait
+-- local sleep   = utils.sleep
+-- local wait    = utils.wait
 local log     = utils.logger
 local check   = utils.check
 local getconf = utils.getconf
@@ -53,13 +53,9 @@ _C.connect = function(server)
     log.bad(("Проблема при инициализации! Сообщение об ошибке: %s. Код: %d"):format(_E.errmsg, _E.errno))
     if _C.ss_proc then _C.ss_proc:kill() end
     _C.ss_proc = nil
-    log.debug"===== перед вызовом wait() ====="
-    wait()
-    log.debug"===== после вызова wait() ====="
     return false
   end
   log.debug"===== Завершено ====="
-  sleep(5)
   log.good"Подключение активировано"
   log.debug"==== Выход из функции подключения ===="
   return true
@@ -72,10 +68,6 @@ _C.disconnect = function(_server)
     _C.ss_proc:terminate()
     _C.ss_proc:wait()
     _C.ss_proc = nil
-    sleep(2)
-    log.debug"===== перед вызовом wait() ====="
-    wait()
-    log.debug"===== после вызова wait() ====="
   else
     log.bad"Вызвана функция отключения, но исчезли дескрипторы подключения. Нужна отладка!"
   end

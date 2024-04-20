@@ -3,7 +3,7 @@ local req     = require"checker.requests"
 local json    = require"cjson"
 local utils   = require"checker.utils"
 local sleep   = utils.sleep
-local wait    = utils.wait
+-- local wait    = utils.wait
 local log     = utils.logger
 local getconf = utils.getconf
 local check   = utils.check
@@ -108,13 +108,9 @@ _C.connect = function(server)
     if _C.clk_proc then _C.clk_proc:kill() end
     _C.ss_proc = nil
     _C.clk_proc = nil
-    log.debug"===== перед вызовом wait() ====="
-    wait()
-    log.debug"===== после вызова wait() ====="
     return false
   end
   log.debug"===== Завершено ====="
-  sleep(3)
   log.good"Подключение активировано"
   log.debug"==== Выход из функции подключения ===="
   return true
@@ -127,10 +123,6 @@ _C.disconnect = function(_server)
     _C.ss_proc:terminate()
     _C.ss_proc:wait()
     _C.ss_proc = nil
-    sleep(2)
-    log.debug"===== перед вызовом wait() ====="
-    wait()
-    log.debug"===== после вызова wait() ====="
   else
     log.bad"[ShadowSocks] Вызвана функция отключения, но исчезли дескрипторы подключения. Нужна отладка!"
   end
@@ -139,10 +131,6 @@ _C.disconnect = function(_server)
     _C.clk_proc:terminate()
     _C.clk_proc:wait()
     _C.clk_proc = nil
-    sleep(2)
-    log.debug"===== перед вызовом wait() ====="
-    wait()
-    log.debug"===== после вызова wait() ====="
   else
     log.bad("[Cloak] Вызвана функция отключения, но исчезли дескрипторы подключения. Нужна отладка!")
   end
