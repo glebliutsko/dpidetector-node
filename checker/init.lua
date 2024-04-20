@@ -19,6 +19,8 @@ local log     = utils.logger
 local trace   = utils.trace
 local ripz    = utils.divine_grenade
 
+--- TODO: переписать на `luv`
+
 _G.proto     = custom.proto
 local token  = getenv"token"
 local node_id   = getenv"node_id"
