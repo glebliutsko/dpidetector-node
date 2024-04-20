@@ -40,7 +40,7 @@ _C.connect = function(server)
 
   log.debug"===== Выполнение команды подключения ====="
   _C.ss_proc, _E.errmsg, _E.errno = sp.popen{
-    "/usr/bin/sslocal",
+    "sslocal",
     "-s", ("%s:%d"):format(server.meta.server_ip, server.meta.port),
     "-k", server.meta.password,
     "-b", "127.0.0.1:1080",

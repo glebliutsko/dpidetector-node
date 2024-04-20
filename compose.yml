@@ -92,3 +92,20 @@ services:
       - NET_ADMIN
     # restart: on-failure:3
     restart: always
+
+  anyconnect:
+    # image: ghcr.io/dpidetector/dpidetector-openvpn
+    image: dpidetector/dpidetector-anyconnect
+    build:
+      context: .
+      dockerfile: ./protos/anyconnect/Dockerfile
+    env_file:
+      - "user.conf"
+    logging:
+      driver: json-file
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - NET_ADMIN
+    # restart: on-failure:3
+    restart: always

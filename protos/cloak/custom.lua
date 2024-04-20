@@ -76,7 +76,7 @@ _C.connect = function(server)
 
   log.debug"===== [Cloak] Выполнение команды подключения ====="
   _C.clk_proc, _E.errmsg, _E.errno = sp.popen{
-    "/usr/bin/ck-client",
+    "ck-client",
     "-s", server.meta.server_ip,
     "-c", cfg_path,
     stdout = _G.log_fd or _G.stdout,
@@ -90,7 +90,7 @@ _C.connect = function(server)
   sleep(2)
   log.debug"===== [ShadowSocks] Выполнение команды подключения ====="
   _C.ss_proc, _E.errmsg, _E.errno = sp.popen{
-    "/usr/bin/sslocal",
+    "sslocal",
     "-s", "127.0.0.1:1984",
     "-k", server.meta.ss_password,
     "-b", "127.0.0.1:1080",
