@@ -19,8 +19,6 @@ local log     = utils.logger
 local trace   = utils.trace
 local ripz    = utils.divine_grenade
 
---- TODO: переписать на `luv`
-
 _G.proto     = custom.proto
 local token  = getenv"token"
 local node_id   = getenv"node_id"
@@ -51,10 +49,12 @@ _G.headers = {
 }
 
 log.debug"= Вход в основной рабочий цикл ="
+--- TODO: переписать на `luv`
 while true do
   log.debug"== Итерация главного цикла начата =="
 
-  --- NOTE: попробуем реализацию с получением конфигурации при каждой итерации
+  --- NOTE:
+  --- попробуем реализацию с получением конфигурации при каждой итерации
   --- (чтобы ноды подхватывали изменения без перезапуска)
   --- посмотрим, не будет ли из-за этого проблем
 
@@ -72,10 +72,11 @@ while true do
   }
 
   if geo:match"RU" then
-    -- Выполнять проверки только если нода выходит в интернет в России (например, не через VPN)
-    -- т.к. в данный момент нас интересует именно блокировка трафика из/внутри России,
-    -- а трафик из заграницы для этих целей бесполезен
-    if custom.type == "transport" then
+    --- NOTE: ☝️☝️☝️
+    --- Выполнять проверки только если нода выходит в интернет в России (например, не через VPN)
+    --- т.к. в данный момент мы анализируем блокировку трафика на сетях именно российских провайдеров,
+    --- а трафик через заграничных для этих целей бесполезен
+    if custom.type == "transport" then --- NOTE: vpn/прокси/и т.п.
       local servers_fetched = req{
         url = servers_endpoint,
         headers = _G.headers,
@@ -191,13 +192,13 @@ while true do
         log.debug(servers_fetched)
         log.debug"=================="
       end
-    elseif custom.type == "service" then
+    elseif custom.type == "service" then --- NOTE: мессенджеры, соцсети, ...
       --- TODO:
       custom.connect()
       custom.check()
       custom.disconnect()
     else
-      log.bad"Не реализовано"
+      log.bad"Запускаемый тип проверочного узла на данный момент не поддерживается"
     end
   end
 
