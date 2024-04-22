@@ -86,6 +86,25 @@ _C.connect = function(server)
     return false
   end
   log.debug"===== Завершено ====="
+  local finished = false
+  local count = 0
+  log.debug"===== Вход в цикл ожидания подключения ====="
+  repeat
+    local e = sp.call{
+      "sh",
+      "-c",
+      ("ip link show | grep -q %s"):format(_C.interface_name),
+    }
+    if e == 0 then finished = true end
+    count = count + 1
+    log.debug(("====== Итерация цикла ожидания подключения: %d ======"):format(count))
+    sleep(1)
+  until finished==true or count>=20
+  log.debug"===== Выход из цикла ожидания подключения ====="
+  if finished == false then
+    log.bad"Проблемы с настройкой подключения. Необходима отладка!"
+    return false
+  end
   log.good"Подключение активировано"
   log.debug"==== Выход из функции подключения ===="
   return true
@@ -100,6 +119,26 @@ _C.disconnect = function(_server)
     _C.oc_proc = nil
   else
     log.bad"Вызвана функция отключения, но исчезли дескрипторы подключения. Нужна отладка!"
+  end
+  local finished = false
+  local count = 0
+  log.debug"===== Вход в цикл ожидания завершения подключения ====="
+  repeat
+    count = count + 1
+    log.debug(("====== Итерация цикла ожидания завершения подключения: %d ======"):format(count))
+    local e = sp.call{
+      "sh",
+      "-c",
+      ("ip link show | grep -q %s"):format(_C.interface_name),
+    }
+    if e == 1 then finished = true end
+    sleep(1)
+  until finished==true or count>=20
+  log.debug"===== Выход из цикла ожидания завершения подключения ====="
+  if finished == false then
+    log.bad"Проблемы с завершением подключения (тунеллирующая програма не завершилась за 20 секунд)!"
+    log.bad"Перезапускаем контейнер"
+    _G.need_restart = true
   end
   log.debug"==== Выход из функции завершения подключения ===="
 end
