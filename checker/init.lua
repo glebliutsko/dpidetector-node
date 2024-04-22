@@ -1,6 +1,6 @@
 -- luacheck: globals
 
-_G.version  = "0.0.3"
+_G.version  = "0.0.4"
 _G.config_default = {
   interval        = 300,
   backend_domain  = "dpidetect.org",
