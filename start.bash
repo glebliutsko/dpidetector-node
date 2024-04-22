@@ -2,6 +2,7 @@
 
 BUILD="${BUILD:+--build}"
 RECREATE="${RECREATE:+--force-recreate}"
+PARALLEL="${PARALLEL:+--parallel ${PARALLEL}}"
 
 function die() {
   echo "${*}" >&2

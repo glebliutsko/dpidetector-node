@@ -76,6 +76,7 @@ while true do
     --- Выполнять проверки только если нода выходит в интернет в России (например, не через VPN)
     --- т.к. в данный момент мы анализируем блокировку трафика на сетях именно российских провайдеров,
     --- а трафик через заграничных для этих целей бесполезен
+
     if custom.type == "transport" then --- NOTE: vpn/прокси/и т.п.
       local servers_fetched = req{
         url = servers_endpoint,
@@ -85,6 +86,7 @@ while true do
       if servers_fetched:match"COULDNT_CONNECT" then
         --- HACK: (костыль) если получили ошибку "невозможно соединиться",
         --- то на всякий случай попробуем перезапросить ещё раз
+        sleep(2)
         servers_fetched = req{
           url = servers_endpoint,
           headers = _G.headers,
@@ -157,6 +159,18 @@ while true do
               post = json.encode(report),
               headers = _G.headers,
             }
+
+            if resp_json:match"COULDNT_CONNECT" then
+              --- HACK: (костыль) если получили ошибку "невозможно соединиться",
+              --- то на всякий случай попробуем отправить ещё раз
+              sleep(2)
+              resp_json = req{
+                url = reports_endpoint,
+                post = json.encode(report),
+                headers = _G.headers,
+              }
+            end
+
             local rok, resp_t = pcall(json.decode, resp_json)
             if not rok then
               log.bad(
