@@ -158,8 +158,6 @@ while true do
               url = reports_endpoint,
               post = json.encode(report),
               headers = _G.headers,
-              useragent =
-                ("DPIDetector/%s (HEISENBUG_DBG, node_id: %s, proto: %s)"):format(_G.version, node_id, custom.proto)
             }
 
             if resp_json:match"COULDNT_CONNECT" then
@@ -170,8 +168,6 @@ while true do
                 url = reports_endpoint,
                 post = json.encode(report),
                 headers = _G.headers,
-                useragent =
-                  ("DPIDetector/%s (HEISENBUG_DBG, node_id: %s, proto: %s)"):format(_G.version, node_id, custom.proto)
               }
             end
 
