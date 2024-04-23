@@ -1,6 +1,6 @@
 -- luacheck: globals
 
-_G.version  = "0.0.4"
+_G.version  = "0.0.5"
 _G.config_default = {
   interval        = 300,
   backend_domain  = "dpidetect.org",
@@ -10,7 +10,6 @@ _G.config_default = {
 
 local json    = require"cjson"
 local utils   = require"checker.utils"
-local req     = require"checker.requests"
 local custom  = require"checker.custom"
 local sleep   = utils.sleep
 local getenv  = utils.getenv
@@ -18,6 +17,7 @@ local getconf = utils.getconf
 local log     = utils.logger
 local trace   = utils.trace
 local ripz    = utils.divine_grenade
+local b64enc  = utils.b64enc
 
 _G.proto     = custom.proto
 local token  = getenv"token"
@@ -47,6 +47,17 @@ _G.headers = {
   ("Software-Version: %s"):format(_G.version),
   "Content-Type: application/json",
 }
+
+
+local function req(t)
+  local r = require"checker.requests"
+  local ret = r(t)
+  if ret:match"CURL%-" then
+    sleep(2)
+    ret = r(t)
+  end
+  return ret
+end
 
 log.debug"= Вход в основной рабочий цикл ="
 --- TODO: переписать на `luv`
@@ -82,16 +93,6 @@ while true do
         url = servers_endpoint,
         headers = _G.headers,
       }
-
-      if servers_fetched:match"COULDNT_CONNECT" then
-        --- HACK: (костыль) если получили ошибку "невозможно соединиться",
-        --- то на всякий случай попробуем перезапросить ещё раз
-        sleep(2)
-        servers_fetched = req{
-          url = servers_endpoint,
-          headers = _G.headers,
-        }
-      end
 
       if servers_fetched
         and servers_fetched:match"domain"
@@ -151,7 +152,7 @@ while true do
             _G.log_fd:flush()
             _G.log_fd:seek"set"
 
-            report.log = _G.log_fd:read"*a"
+            report.log = b64enc(_G.log_fd:read"*a" or "")
 
             log.print"Отправка отчёта"
             local resp_json = req{
@@ -159,17 +160,6 @@ while true do
               post = json.encode(report),
               headers = _G.headers,
             }
-
-            if resp_json:match"COULDNT_CONNECT" then
-              --- HACK: (костыль) если получили ошибку "невозможно соединиться",
-              --- то на всякий случай попробуем отправить ещё раз
-              sleep(2)
-              resp_json = req{
-                url = reports_endpoint,
-                post = json.encode(report),
-                headers = _G.headers,
-              }
-            end
 
             local rok, resp_t = pcall(json.decode, resp_json)
             if not rok then
