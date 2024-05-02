@@ -304,7 +304,7 @@ function _U.getconf(opt)
   return config[opt] or _G.config_default[opt]
 end
 
-function _U.check(res, ip)
+function _U.check_ip(res, ip)
   local l = _U.logger
   if res:match(ip) then
     l.good"Проверка завершена успешно"
@@ -330,17 +330,25 @@ end
 
 function _U.trace(srv)
   _U.logger.debug"===== Выполнение трассировки прохождения трафика до сервера ====="
+  local protoport
+  if not srv.host then
+    _U.logger.error"===== Не указан сервер для проверки ====="
+    return false
+  end
+  if type(tonumber(srv.port)) == "number" and ({tcp=true, udp=true})[srv.proto] then
+    protoport = ("--%s --port %d"):format(srv.proto, srv.port)
+  else
+    protoport = ""
+  end
   local mtr_fd = io.popen(table.concat({
     "mtr",
     "--no-dns",
-    "--report-wide",
-    "--report-cycles=1",
-    "--gracetime=1",
+    "--report",
+    ("--report-cycles=%d"):format(srv.cycles or 5),
+    ("--gracetime=%d"):format(srv.tmout or 2),
     "--aslookup",
-    "--tcp",
-    "--port",
-    srv.port,
-    srv.domain,
+    protoport,
+    srv.host,
   },
   " "
   ))
@@ -355,10 +363,10 @@ function _U.divine_grenade()
   local wait = _U.wait
   local zombies = true
   local count = 0
-  _U.logger.debug"===== Вход в цикл очистки зомби-процессов ====="
+  _U.logger.debug"= Вход в цикл очистки зомби-процессов ="
   repeat
     count = count + 1
-    _U.logger.debug(("====== Итерация цикла очистки зомби-процессов: %d ======"):format(count))
+    _U.logger.debug(("== Итерация цикла очистки зомби-процессов: %d =="):format(count))
     local e = sp.call{
       "sh",
       "-c",
@@ -366,16 +374,78 @@ function _U.divine_grenade()
     }
     if e == 1 then zombies = false end
     if zombies == true then
-      _U.logger.debug"====== перед вызовом wait() ======"
+      _U.logger.debug"=== перед вызовом wait() ==="
       wait()
-      _U.logger.debug"====== после вызова wait() ======"
+      _U.logger.debug"=== после вызова wait() ==="
     end
   until zombies==false or count>=20
-  _U.logger.debug"===== Выход из цикла очистки зомби-процессов ====="
+  _U.logger.debug"=== Выход из цикла очистки зомби-процессов ==="
   if zombies == true then
     _U.logger.bad"Проблемы с очисткой зомби-процессов (накопилось больше 20 зомби)!"
     _U.logger.bad"Перезапускаем контейнер"
     _G.need_restart = true
+  end
+end
+
+function _U.is_locked()
+  local fd = io.open("/tmp/.lock_checks", "r")
+  if not fd then
+    return false
+  else
+    fd:close()
+    return true
+  end
+end
+
+function _U.req(t)
+  local function failed(s) return not(not(s:match"CURL%-")) end
+  local r = require"checker.requests"
+  local l = _U.logger
+  l.debug"= Запуск функциии выполнения веб-запроса ="
+
+  local ret = r(t)
+
+  if failed(ret) then
+    l.debug"== При выполнении запроса произошла ошибка. Попробуем ещё несколько раз (максимум 10) =="
+    local retries  = t.retries or 3
+    local fails = 1
+
+    repeat
+      l.debug(("=== Попытка %d ==="):format(fails))
+      _U.sleep(3)
+      ret = r(t)
+      if failed(ret) then fails=fails+1 end
+    until fails==retries or not(failed(ret))
+    if failed(ret) then
+      l.bad"Попытки получения ответа исчерпаны. Ответ получить не удалось"
+    end
+  end
+  l.debug"= Функция выполнения веб-запроса завершена ="
+  return ret
+end
+
+function _U.read(name)
+  local fd, err = io.open(name, "r")
+  if fd then
+    local content = fd:read"*a"
+    fd:close()
+    return content
+  else
+    _U.logger.bad(("Проблема при чтении файла %s. Сообщение об ошибке: %s"):format(name, err))
+    return false
+  end
+end
+
+function _U.write(name, content)
+  local fd, err = io.open(name, "w+")
+  if fd then
+    fd:write(content)
+    fd:flush()
+    fd:close()
+    return true
+  else
+    _U.logger.bad(("Проблема при открытии на запись файла %s. Сообщение об ошибке: %s"):format(name, err))
+    return false
   end
 end
 

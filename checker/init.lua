@@ -1,39 +1,42 @@
 -- luacheck: globals
 
-_G.version  = "0.0.5"
 _G.config_default = {
   interval        = 300,
   backend_domain  = "dpidetect.org",
-  geo_domain      = "geo.dpidetect.org",
+  get_geo_url     = "https://geo.dpidetect.org/get-iso/plain",
   get_ip_url      = "https://geo.dpidetect.org/get-ip/plain",
 }
 
-local json    = require"cjson"
-local utils   = require"checker.utils"
-local custom  = require"checker.custom"
-local sleep   = utils.sleep
-local getenv  = utils.getenv
-local getconf = utils.getconf
-local log     = utils.logger
-local trace   = utils.trace
-local ripz    = utils.divine_grenade
-local b64enc  = utils.b64enc
-
-_G.proto     = custom.proto
-local token  = getenv"token"
+local json      = require"cjson"
+local custom    = require"checker.custom"
+local utils     = require"checker.utils"
+local sleep     = utils.sleep
+local getenv    = utils.getenv
+local getconf   = utils.getconf
+local log       = utils.logger
+local trace     = utils.trace
+local ripz      = utils.divine_grenade
+local b64enc    = utils.b64enc
+local is_locked = utils.is_locked
+local req       = utils.req
+local read      = utils.read
+_G.proto        = custom.proto
+local token     = getenv"token"
 local node_id   = getenv"node_id"
 
-_G.DEBUG = os.getenv"DEBUG" or os.getenv(("%s_DEBUG"):format(_G.proto:gsub("-", "_")))
+_G.version = read"/VERSION":match"v(.-)[\r\n]*$"
+
+_G.DEBUG   = os.getenv"DEBUG" or os.getenv(("%s_DEBUG"):format(_G.proto:gsub("-", "_")))
 _G.VERBOSE = os.getenv"VERBOSE" or os.getenv(("%s_VERBOSE"):format(_G.proto:gsub("-", "_")))
-_G.QUIET = os.getenv"QUIET" and not(_G.VERBOSE or _G.DEBUG)
+_G.QUIET   = os.getenv"QUIET" and not(_G.VERBOSE or _G.DEBUG)
 
 _G.devnull = io.output("/dev/null")
 if _G.QUIET then
   _G.stdout  = _G.devnull
   _G.stderr  = _G.devnull
 else
-  _G.stdout = io.stdout
-  _G.stderr = io.stderr
+  _G.stdout  = io.stdout
+  _G.stderr  = io.stderr
   io.output(io.stdout)
 end
 
@@ -48,29 +51,23 @@ _G.headers = {
   "Content-Type: application/json",
 }
 
-
-local function req(t)
-  local r = require"checker.requests"
-  local ret = r(t)
-  if ret:match"CURL%-" then
-    sleep(2)
-    ret = r(t)
-  end
-  return ret
-end
+math.randomseed(
+  math.fmod(
+    table.concat{
+      (("dpidetector/%s"):format(_G.proto)):byte(1, -1)
+    } + os.clock(),
+    os.time() + os.clock()
+  ) ^ ( -1 / os.clock() )
+)
 
 log.debug"= Вход в основной рабочий цикл ="
 --- TODO: переписать на `luv`
-while true do
+local cycle = 0
+repeat
   log.debug"== Итерация главного цикла начата =="
 
-  --- NOTE:
-  --- попробуем реализацию с получением конфигурации при каждой итерации
-  --- (чтобы ноды подхватывали изменения без перезапуска)
-  --- посмотрим, не будет ли из-за этого проблем
-
   _G.current_config_json = req{
-    url = "https://dpidetector.github.io/config.json"
+    url = "https://dpidetector.github.io/dpidetector-node/config.json"
   }
 
   local api = ("https://%s/api"):format(getconf"backend_domain")
@@ -79,10 +76,10 @@ while true do
   local interval = getconf"interval"
 
   local geo = req{
-    url = ("https://%s/get-iso/plain"):format(getconf"geo_domain")
+    url = getconf"get_geo_url"
   }
 
-  if geo:match"RU" then
+  if not is_locked() and geo:match"RU" then
     --- NOTE: ☝️☝️☝️
     --- Выполнять проверки только если нода выходит в интернет в России (например, не через VPN)
     --- т.к. в данный момент мы анализируем блокировку трафика на сетях именно российских провайдеров,
@@ -115,7 +112,11 @@ while true do
 
             _G.log_fd = io.open(log_fn, "w+")
 
-            trace(server or { domain="localhost", port = 0, })
+            trace(server.domain and {
+              host = server.domain,
+              proto = "tcp",
+              port = 443,
+            })
 
             sleep(5) --- NOTE: пауза между итерациями проверок
             log.print"Попытка установления соединения с сервером и проверки работоспособности подключения"
@@ -209,4 +210,7 @@ while true do
   log.debug"== Итерация главного цикла окончена =="
   log.debug"== Ожидание следующей итерации цикла проверки =="
   sleep(interval)
-end
+  cycle = cycle + 1
+until cycle>=86400/interval+math.random(3, 7)
+--- NOTE:    ☝️☝️ раз в сутки (+ рандомизация чтобы перезапускались не все контейнеры одновременно)
+log.print("= Плановый перезапуск раз в сутки для очистки контейнера от потенциальных утечек =")

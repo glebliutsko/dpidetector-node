@@ -1,53 +1,39 @@
 #!/usr/bin/env bash
 
-REPO_URL="https://github.com/DPIdetector/dpidetector-node"
-
-function die() {
-  echo "${*}" >&2
-  exit 1
-}
-function checkutil() {
-  which "${1}" &>/dev/null
-}
-function co() {
-  git clone "${REPO_URL}" "${1}"
-}
-
-TMP=${TMP:-${TMPDIR:-${TEMP:-/tmp}}}
-
-touch "${TMP}/test.file.test" || die "Нет доступа на запись в директорию для временных файлов (${TMP})"
-rm "${TMP}/test.file.test"
+source .common.bash
 
 checkutil git || die "Не удалось найти утилиту 'git'"
 
+function wait_for_conf() {
+  if ! [[ -f "${PWD}/user.conf" ]]; then
+    echo "Скачайте из панели управления конфигурационный файл для данного узла" \
+    "и поместите его в рабочую директорию (${PWD})." \
+    "После чего нажмите Enter"
+    read
+  fi
+}
+
 if [[ -f "install.bash" && -f "start.bash" && -f "update.bash" && -f "compose.yml" ]]; then
+  # NOTE: Похоже, нас вызвали из директории уже скачанного проекта
   shopt -s dotglob
   url="$([[ -d "${PWD}/.git" ]] && git config --local remote.origin.url)"
-  # NOTE: Похоже, нас вызвали из директории уже скачанного проекта
-  bkp="${TMP}/dpidetector.bkp"
-  rm -r "${bkp}" &>/dev/null
-  mkdir "${bkp}"
-  mv ./* "${bkp}/"
-  if [[ -d "${bkp}/.git" && ( "${url}" == "${REPO_URL}" || "${url}" == "git@"* ) ]]; then
-    cp -a "${bkp}/.git" "${PWD}"
-    git reset --hard
-    git pull
+  if [[ -d "${PWD}/.git" ]]; then
+    if [[ "${url}" == "${REPO_URL}" ]]; then
+      git reset --hard
+    elif [[ "${url}" == "git@"* ]]; then
+      git stash push
+    fi
   else
-    co "${PWD}"
-  fi
-  if [[ -f "${bkp}/user.conf" ]]; then
-    cp "${bkp}/user.conf" "${PWD}"
+    co "${PWD}/.b" || die "Не удалось скачать репозиторий"
+    mv "${PWD}/.b/.git" "${PWD}"
+    rm -r "${PWD}/.b"
+    git reset --hard
   fi
 else # NOTE: Похоже, нас вызвали для первоначальной установки
-  CO_DIR="${REPO_URL##*/}"
-  co "${CO_DIR}"
+  CO_DIR="${PWD}/${REPO_URL##*/}"
+  co "${CO_DIR}" || die "Не удалось скачать репозиторий"
   cd "${CO_DIR}"
 fi
 
-if ! [[ -f "${PWD}/user.conf" ]]; then
-  echo "Скачайте из панели управления конфигурационный файл для данного узла" \
-   "и поместите его в рабочую директорию (${PWD})." \
-   "После чего нажмите Enter"
-  read
-fi
-BUILD=1 RECREATE=1 bash start.bash
+wait_for_conf
+bash update.bash

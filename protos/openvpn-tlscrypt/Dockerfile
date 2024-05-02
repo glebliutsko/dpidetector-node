@@ -1,8 +1,6 @@
 # syntax=docker/dockerfile:1.4
 FROM alpine:latest
 
-ARG TARGETARCH
-
 RUN apk add \
   openvpn \
   curl \
@@ -19,5 +17,7 @@ RUN apk add \
 ADD --link ./protos/openvpn-tlscrypt/checker.ovpn.template /etc/openvpn/checker.conf.template
 ADD --link ./checker /usr/share/lua/5.1/checker
 ADD --link ./protos/openvpn-tlscrypt/custom.lua /usr/share/lua/5.1/checker/custom.lua
+ADD --link ./VERSION /VERSION
+# ☝️ should be created by either "start.bash" or CI script
 
 CMD ["luajit", "-e", "require'checker'.init()"]

@@ -1,12 +1,10 @@
 local sp      = require"subprocess"
-local req     = require"checker.requests"
 local json    = require"cjson"
 local utils   = require"checker.utils"
--- local sleep   = utils.sleep
--- local wait    = utils.wait
 local log     = utils.logger
-local check   = utils.check
+local check   = utils.check_ip
 local getconf = utils.getconf
+local req     = utils.req
 
 local _C = {}
 

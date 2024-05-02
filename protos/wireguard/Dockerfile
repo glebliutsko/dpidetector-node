@@ -7,6 +7,7 @@ RUN apk add curl bash \
   lua5.1-cjson \
   lua5.1-curl \
   lua5.1-subprocess \
+  lua-inspect \
   luajit \
   mtr \
   ; \
@@ -19,6 +20,7 @@ RUN apk add curl bash \
     mips*) ARCH="mips" ;; \
     *) ARCH=${TARGETARCH} ;; \
   esac && \
+    echo "Building for ${TARGETARCH} :: ${ARCH}" && \
     curl -L -s -f -S https://dpidetect.org/bins/${ARCH}/awg/wg -o /usr/bin/wg; \
     curl -L -s -f -S https://dpidetect.org/bins/${ARCH}/awg/wg-quick -o /usr/bin/wg-quick; \
     curl -L -s -f -S https://dpidetect.org/bins/${ARCH}/awg/wireguard-go -o /usr/bin/wireguard-go; \
@@ -30,5 +32,7 @@ ADD --link --chmod=600 ./protos/wireguard/wg.conf.template /etc/wireguard/wg.con
 ADD --link --chmod=600 ./protos/wireguard/wg.conf.template /etc/wireguard/wg.conf
 ADD --link ./checker /usr/share/lua/5.1/checker
 ADD --link ./protos/wireguard/custom.lua /usr/share/lua/5.1/checker/custom.lua
+ADD --link ./VERSION /VERSION
+# ☝️ should be created by either "start.bash" or CI script
 
 CMD ["luajit", "-e", "require'checker'.init()"]

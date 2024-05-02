@@ -1,9 +1,10 @@
-local cURL = require"cURL"
-
-local log = require"checker.utils".logger
-local split = require"checker.utils".split
-
 return function(settings)
+  local cURL  = require"cURL"
+
+  local utils = require"checker.utils"
+  local log   = utils.logger
+  local split = utils.split
+
   if type(settings) ~= "table" then settings = {} end
   if not settings.url then error("Вызов функции запроса URL без указания самого URL 🤷") end
 
@@ -32,8 +33,8 @@ return function(settings)
   c:setopt_url(settings.url)
   c:setopt_writefunction(function(chunk) table.insert(wbuf, chunk) end)
 
-  c:setopt_timeout(settings.timeout or 10)
-  c:setopt_connecttimeout(settings.connect_timeout or 10)
+  c:setopt_timeout(settings.timeout or 3)
+  c:setopt_connecttimeout(settings.connect_timeout or 3)
 
   -- c:perform()
   if _G.DEBUG then

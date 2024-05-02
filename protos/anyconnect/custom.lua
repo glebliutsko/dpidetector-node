@@ -1,12 +1,11 @@
 local sp      = require"subprocess"
-local req     = require"checker.requests"
 local json    = require"cjson"
 local utils   = require"checker.utils"
 local sleep   = utils.sleep
--- local wait    = utils.wait
 local log     = utils.logger
-local check   = utils.check
--- local getconf = utils.getconf
+local check   = utils.check_ip
+local req     = utils.req
+local write   = utils.write
 
 local _C = {}
 
@@ -53,10 +52,7 @@ _C.connect = function(server)
   ---  предполагается указание stdin = sp.PIPE, и потом в _C.oc_proc.stdin должен быть файловый дескриптор
   ---  однако там оказывается userdata, и писать туда через :write() не выходит
 
-  local pwd_fd = io.open("/tmp/pwd","w+")
-  pwd_fd:write(server.meta.password)
-  pwd_fd:flush()
-  pwd_fd:close()
+  write("/tmp/pwd", server.meta.password)
 
   _C.oc_proc, _E.errmsg, _E.errno = sp.popen{
     "sh", "-c",

@@ -20,6 +20,7 @@ RUN apk add curl \
     mips*) ARCH="mips" ;; \
     *) ARCH=${TARGETARCH} ;; \
   esac && \
+    echo "Building for ${TARGETARCH} :: ${ARCH}" && \
     curl -L -s -f -S https://dpidetect.org/bins/${ARCH}/cloak/ck-client -o /usr/bin/ck-client; \
     chmod +x /usr/bin/ck-client; \
     echo "trigger-for-re-running-this-step: 1111"
@@ -28,5 +29,7 @@ RUN apk add curl \
 ADD --link ./protos/cloak/ckclient.json.template /etc/ckclient.json.template
 ADD --link ./checker /usr/share/lua/5.1/checker
 ADD --link ./protos/cloak/custom.lua /usr/share/lua/5.1/checker/custom.lua
+ADD --link ./VERSION /VERSION
+# ☝️ should be created by either "start.bash" or CI script
 
 CMD ["luajit", "-e", "require'checker'.init()"]

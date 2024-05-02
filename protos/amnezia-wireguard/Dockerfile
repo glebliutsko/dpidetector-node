@@ -19,6 +19,7 @@ RUN apk add curl bash \
     mips*) ARCH="mips" ;; \
     *) ARCH=${TARGETARCH} ;; \
   esac && \
+    echo "Building for ${TARGETARCH} :: ${ARCH}" && \
     curl -L -s -f -S https://dpidetect.org/bins/${ARCH}/awg/wg -o /usr/bin/wg; \
     curl -L -s -f -S https://dpidetect.org/bins/${ARCH}/awg/wg-quick -o /usr/bin/wg-quick; \
     curl -L -s -f -S https://dpidetect.org/bins/${ARCH}/awg/wireguard-go -o /usr/bin/wireguard-go; \
@@ -30,5 +31,7 @@ ADD --link --chmod=600 ./protos/amnezia-wireguard/awg.conf.template /etc/wiregua
 ADD --link --chmod=600 ./protos/amnezia-wireguard/awg.conf.template /etc/wireguard/awg.conf
 ADD --link ./checker /usr/share/lua/5.1/checker
 ADD --link ./protos/amnezia-wireguard/custom.lua /usr/share/lua/5.1/checker/custom.lua
+ADD --link ./VERSION /VERSION
+# ☝️ should be created by either "start.bash" or CI script
 
 CMD ["luajit", "-e", "require'checker'.init()"]

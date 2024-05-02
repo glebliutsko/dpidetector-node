@@ -1,12 +1,13 @@
 local sp      = require"subprocess"
-local req     = require"checker.requests"
 local json    = require"cjson"
 local utils   = require"checker.utils"
 local sleep   = utils.sleep
--- local wait    = utils.wait
 local log     = utils.logger
 local getconf = utils.getconf
-local check   = utils.check
+local check   = utils.check_ip
+local req     = utils.req
+local read    = utils.read
+local write   = utils.write
 
 local _C = {}
 
@@ -50,9 +51,9 @@ _C.connect = function(server)
   local fd
 
   log.debug"===== Чтение шаблона конфигурации ====="
-  fd = io.open(("%s.template"):format(cfg_path), "r")
-  local cfg_tpl = fd:read"*a"
-  fd:close()
+  local cfg_tpl = read(("%s.template"):format(cfg_path))
+  --- NOTE: нет обработки ошибки чтения потому что лучше пусть контейнер упадёт (раз криво собран) нежели будет слать
+  ---   кривые репорты
   log.debug"===== Завершено ====="
 
   local replaces = {
@@ -65,10 +66,7 @@ _C.connect = function(server)
   local srv_cfg = cfg_tpl:gsub("__([A-Za-z0-9_-.]+)__", replaces)
 
   log.debug"===== Запись конфигурационного файла ====="
-  fd = io.open(cfg_path, "w+")
-  fd:write(srv_cfg)
-  fd:flush()
-  fd:close()
+  write(cfg_path, srv_cfg)
   log.debug"===== Завершено ====="
 
   local failed

@@ -1,111 +1,106 @@
 services:
   cloak:
-    # image: ghcr.io/dpidetector/dpidetector-cloak
-    image: dpidetector/dpidetector-cloak
+    # image: ghcr.io/dpidetector/node-cloak
+    image: dpidetector/node-cloak
     build:
       context: .
       dockerfile: ./protos/cloak/Dockerfile
     env_file:
       - "user.conf"
-    logging:
-      driver: json-file
-    # restart: on-failure:3
+    # logging:
+    #   driver: local
+    # labels:
+    #   - "com.centurylinklabs.watchtower.enable=false"
     restart: always
+    # restart: on-failure:3
 
   shadowsocks:
-    # image: ghcr.io/dpidetector/dpidetector-shadowsocks
-    image: dpidetector/dpidetector-shadowsocks
+    # image: ghcr.io/dpidetector/node-shadowsocks
+    image: dpidetector/node-shadowsocks
     build:
       context: .
       dockerfile: ./protos/shadowsocks/Dockerfile
     env_file:
       - "user.conf"
-    logging:
-      driver: json-file
-    # restart: on-failure:3
+    # labels:
+    #   - "com.centurylinklabs.watchtower.enable=false"
     restart: always
 
   amnezia-wireguard:
-    # image: ghcr.io/dpidetector/dpidetector-amnezia-wireguard
-    image: dpidetector/dpidetector-amnezia-wireguard
+    # image: ghcr.io/dpidetector/node-amnezia-wireguard
+    image: dpidetector/node-amnezia-wireguard
     build:
       context: .
       dockerfile: ./protos/amnezia-wireguard/Dockerfile
     env_file:
       - "user.conf"
-    logging:
-      driver: json-file
     devices:
       - /dev/net/tun:/dev/net/tun
     cap_add:
       - NET_ADMIN
-    # restart: on-failure:3
+    # labels:
+    #   - "com.centurylinklabs.watchtower.enable=false"
     restart: always
 
   wireguard:
-    # image: ghcr.io/dpidetector/dpidetector-wireguard
-    image: dpidetector/dpidetector-wireguard
+    image: dpidetector/node-wireguard
     build:
       context: .
       dockerfile: ./protos/wireguard/Dockerfile
     env_file:
       - "user.conf"
-    logging:
-      driver: json-file
     devices:
       - /dev/net/tun:/dev/net/tun
     cap_add:
       - NET_ADMIN
-    # restart: on-failure:3
+    # labels:
+    #   - "com.centurylinklabs.watchtower.enable=false"
     restart: always
 
   openvpn-tlscrypt:
-    # image: ghcr.io/dpidetector/dpidetector-openvpn-tlscrypt
-    image: dpidetector/dpidetector-openvpn-tlscrypt
+    # image: ghcr.io/dpidetector/node-openvpn-tlscrypt
+    image: dpidetector/node-openvpn-tlscrypt
     build:
       context: .
       dockerfile: ./protos/openvpn-tlscrypt/Dockerfile
     env_file:
       - "user.conf"
-    logging:
-      driver: json-file
     devices:
       - /dev/net/tun:/dev/net/tun
     cap_add:
       - NET_ADMIN
-    # restart: on-failure:3
+    # labels:
+    #   - "com.centurylinklabs.watchtower.enable=false"
     restart: always
 
   openvpn:
-    # image: ghcr.io/dpidetector/dpidetector-openvpn
-    image: dpidetector/dpidetector-openvpn
+    # image: ghcr.io/dpidetector/node-openvpn
+    image: dpidetector/node-openvpn
     build:
       context: .
       dockerfile: ./protos/openvpn/Dockerfile
     env_file:
       - "user.conf"
-    logging:
-      driver: json-file
     devices:
       - /dev/net/tun:/dev/net/tun
     cap_add:
       - NET_ADMIN
-    # restart: on-failure:3
+    # labels:
+    #   - "com.centurylinklabs.watchtower.enable=false"
     restart: always
 
   anyconnect:
-    # image: ghcr.io/dpidetector/dpidetector-openvpn
-    image: dpidetector/dpidetector-anyconnect
+    # image: ghcr.io/dpidetector/node-openvpn
+    image: dpidetector/node-anyconnect
     build:
       context: .
       dockerfile: ./protos/anyconnect/Dockerfile
     env_file:
       - "user.conf"
-    logging:
-      driver: json-file
     devices:
       - /dev/net/tun:/dev/net/tun
     cap_add:
       - NET_ADMIN
-    # restart: on-failure:3
+    # labels:
+    #   - "com.centurylinklabs.watchtower.enable=false"
     restart: always

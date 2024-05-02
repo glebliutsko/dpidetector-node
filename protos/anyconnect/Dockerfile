@@ -16,5 +16,7 @@ RUN apk add curl bash \
 # WARN: don't forget that all paths are relative to the root of the repo
 ADD --link ./checker /usr/share/lua/5.1/checker
 ADD --link ./protos/anyconnect/custom.lua /usr/share/lua/5.1/checker/custom.lua
+ADD --link ./VERSION /VERSION
+# ☝️ should be created by either "start.bash" or CI script
 
 CMD ["luajit", "-e", "require'checker'.init()"]
