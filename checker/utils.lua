@@ -401,23 +401,26 @@ function _U.req(t)
   local function failed(s) return not(not(s:match"CURL%-")) end
   local r = require"checker.requests"
   local l = _U.logger
-  l.debug"= Запуск функциии выполнения веб-запроса ="
 
+  l.debug"= Запуск функциии выполнения веб-запроса ="
   local ret = r(t)
 
   if failed(ret) then
-    l.debug"== При выполнении запроса произошла ошибка. Попробуем ещё несколько раз (максимум 10) =="
+    l.debug"== При выполнении запроса произошла ошибка =="
     local retries  = t.retries or 3
-    local fails = 1
 
-    repeat
-      l.debug(("=== Попытка %d ==="):format(fails))
-      _U.sleep(3)
-      ret = r(t)
-      if failed(ret) then fails=fails+1 end
-    until fails==retries or not(failed(ret))
-    if failed(ret) then
-      l.bad"Попытки получения ответа исчерпаны. Ответ получить не удалось"
+    if retries > 0 then
+      l.debug(("== Попробуем ещё несколько раз (максимум %d) =="):format(retries))
+      local fails = 1
+      repeat
+        l.debug(("=== Попытка %d ==="):format(fails))
+        _U.sleep(3)
+        ret = r(t)
+        if failed(ret) then fails=fails+1 end
+      until fails>=retries or not(failed(ret))
+      if failed(ret) then
+        l.bad"Попытки получения ответа исчерпаны. Ответ получить не удалось"
+      end
     end
   end
   l.debug"= Функция выполнения веб-запроса завершена ="

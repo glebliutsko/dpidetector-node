@@ -47,6 +47,7 @@ log.debug"Запуск приложения"
 
 _G.headers = {
   ("Token: %s"):format(token),
+  ("Node-Id: %s"):format(node_id),
   ("Software-Version: %s"):format(_G.version),
   "Content-Type: application/json",
 }
@@ -89,6 +90,9 @@ repeat
       local servers_fetched = req{
         url = servers_endpoint,
         headers = _G.headers,
+        timeout = 10,
+        connect_timeout = 10,
+        retries = 10,
       }
 
       if servers_fetched
@@ -160,6 +164,9 @@ repeat
               url = reports_endpoint,
               post = json.encode(report),
               headers = _G.headers,
+              timeout = 10,
+              connect_timeout = 10,
+              retries = 0,
             }
 
             local rok, resp_t = pcall(json.decode, resp_json)

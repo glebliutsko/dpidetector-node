@@ -43,6 +43,7 @@ services:
     restart: always
 
   wireguard:
+    # image: ghcr.io/dpidetector/node-amnezia-wireguard
     image: dpidetector/node-wireguard
     build:
       context: .
@@ -90,7 +91,7 @@ services:
     restart: always
 
   anyconnect:
-    # image: ghcr.io/dpidetector/node-openvpn
+    # image: ghcr.io/dpidetector/node-anyconnect
     image: dpidetector/node-anyconnect
     build:
       context: .
