@@ -9,8 +9,8 @@ services:
       - "user.conf"
     # logging:
     #   driver: local
-    # labels:
-    #   - "com.centurylinklabs.watchtower.enable=false"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=false"
     restart: always
     # restart: on-failure:3
 
@@ -22,8 +22,8 @@ services:
       dockerfile: ./protos/shadowsocks/Dockerfile
     env_file:
       - "user.conf"
-    # labels:
-    #   - "com.centurylinklabs.watchtower.enable=false"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=false"
     restart: always
 
   amnezia-wireguard:
@@ -38,8 +38,8 @@ services:
       - /dev/net/tun:/dev/net/tun
     cap_add:
       - NET_ADMIN
-    # labels:
-    #   - "com.centurylinklabs.watchtower.enable=false"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=false"
     restart: always
 
   wireguard:
@@ -53,8 +53,8 @@ services:
       - /dev/net/tun:/dev/net/tun
     cap_add:
       - NET_ADMIN
-    # labels:
-    #   - "com.centurylinklabs.watchtower.enable=false"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=false"
     restart: always
 
   openvpn-tlscrypt:
@@ -69,8 +69,8 @@ services:
       - /dev/net/tun:/dev/net/tun
     cap_add:
       - NET_ADMIN
-    # labels:
-    #   - "com.centurylinklabs.watchtower.enable=false"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=false"
     restart: always
 
   openvpn:
@@ -85,8 +85,8 @@ services:
       - /dev/net/tun:/dev/net/tun
     cap_add:
       - NET_ADMIN
-    # labels:
-    #   - "com.centurylinklabs.watchtower.enable=false"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=false"
     restart: always
 
   anyconnect:
@@ -101,6 +101,6 @@ services:
       - /dev/net/tun:/dev/net/tun
     cap_add:
       - NET_ADMIN
-    # labels:
-    #   - "com.centurylinklabs.watchtower.enable=false"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=false"
     restart: always
